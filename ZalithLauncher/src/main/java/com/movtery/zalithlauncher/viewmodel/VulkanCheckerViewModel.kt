@@ -23,6 +23,7 @@ import com.movtery.zalithlauncher.ui.vulkan_checker.VCOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -31,9 +32,21 @@ class VulkanCheckerViewModel: ViewModel() {
     val vcOperation = _vcOperation.asStateFlow()
 
     var vulkanCheckerCont: (Continuation<Unit>)? = null
+        private set
 
     fun changeOperation(operation: VCOperation) {
         _vcOperation.update { operation }
+    }
+
+    suspend fun waitForVulkanChecker() {
+        suspendCancellableCoroutine { cont ->
+            vulkanCheckerCont = cont
+            changeOperation(VCOperation.Tip)
+
+            cont.invokeOnCancellation {
+                vulkanCheckerCont = null
+            }
+        }
     }
 
     fun resumeCont() {

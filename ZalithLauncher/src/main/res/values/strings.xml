@@ -423,7 +423,7 @@
     <string name="game_saponsorship_finished_game">The launcher has successfully run the game %s times! If you find it useful, please consider supporting the developer! :)</string>
 
     <string name="game_vulkan_check_title">Vulkan 检测</string>
-    <string name="game_vulkan_check_text">检查您的设备是否支持使用 Vulkan 运行 Minecraft 26.2+，结果仅供参考。检查结束后，您可以正常启动游戏。</string>
+    <string name="game_vulkan_check_text">检查您的设备是否支持使用 Vulkan 运行 Minecraft 26.2+，结果仅供参考</string>
     <string name="game_vulkan_check_version">Vulkan 版本：%s</string>
     <string name="game_vulkan_check_turnip">使用 Turnip：%s</string>
     <string name="game_vulkan_check_extensions">依赖的扩展：</string>

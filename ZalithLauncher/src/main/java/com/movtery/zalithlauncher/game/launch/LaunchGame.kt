@@ -117,8 +117,10 @@ object LaunchGame {
             customName = version.getVersionName(),
             verifyIntegrity = !version.skipGameIntegrityCheck(),
             mode = DownloadMode.VERIFY_AND_REPAIR,
-            onCompletion = {
+            onCompletion = { task ->
+                task.updateProgress(-1f, null)
                 checkEnableTouchProxy(version)
+                task.updateMessage(R.string.game_vulkan_check_title)
                 checkVulkanCapabilities(version, waitForVulkanChecker)
 
                 runGame(context, version)

@@ -97,7 +97,6 @@ import com.movtery.zalithlauncher.viewmodel.VulkanCheckerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
@@ -310,7 +309,7 @@ class MainActivity : BaseAppCompatActivity() {
                         exitActivity = {
                             this@MainActivity.finish()
                         },
-                        waitForVulkanChecker = ::waitForVulkanChecker,
+                        waitForVulkanChecker = vulkanCheckerViewModel::waitForVulkanChecker,
                         submitError = {
                             errorViewModel.showError(it)
                         },
@@ -462,13 +461,6 @@ class MainActivity : BaseAppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleImportIfNeeded(intent)
-    }
-
-    private suspend fun waitForVulkanChecker() {
-        suspendCancellableCoroutine { cont ->
-            vulkanCheckerViewModel.vulkanCheckerCont = cont
-            vulkanCheckerViewModel.changeOperation(VCOperation.Tip)
-        }
     }
 
     /**
