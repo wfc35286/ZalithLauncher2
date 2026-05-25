@@ -148,7 +148,8 @@ fun GamePathItemLayout(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     onRename: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    enabled: Boolean = true,
 ) {
     val notDefault = item.id != GamePathManager.DEFAULT_ID
 
@@ -157,7 +158,9 @@ fun GamePathItemLayout(
         colors = NavigationDrawerItemDefaults.colors(),
         label = {
             Column(
-                modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                modifier = Modifier
+                    .padding(top = 4.dp, bottom = 4.dp)
+                    .alpha(if (enabled) 1f else DisabledAlpha)
             ) {
                 Text(
                     modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
@@ -228,7 +231,9 @@ fun GamePathItemLayout(
             }
         },
         selected = selected,
-        onClick = onClick
+        onClick = {
+            if (enabled) onClick()
+        }
     )
 }
 
