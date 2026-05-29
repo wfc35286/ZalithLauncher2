@@ -31,8 +31,6 @@ import com.movtery.zalithlauncher.context.copyLocalFile
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.utils.image.isImageFile
 import com.movtery.zalithlauncher.utils.video.isVideoFile
-import dev.chrisbanes.haze.HazePositionStrategy
-import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,10 +41,6 @@ import java.io.File
  * 启动器背景管理
  */
 class BackgroundViewModel: ViewModel() {
-    val hazeState = HazeState().apply {
-        this.positionStrategy = HazePositionStrategy.Auto
-    }
-
     val backgroundFile: File = PathManager.FILE_LAUNCHER_BACKGROUND
 
     /**

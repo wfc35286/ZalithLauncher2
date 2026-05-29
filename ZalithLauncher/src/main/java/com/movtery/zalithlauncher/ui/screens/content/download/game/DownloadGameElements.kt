@@ -73,10 +73,8 @@ import com.movtery.zalithlauncher.game.addons.modloader.forgelike.forge.ForgeVer
 import com.movtery.zalithlauncher.game.addons.modloader.forgelike.neoforge.NeoForgeVersion
 import com.movtery.zalithlauncher.game.addons.modloader.modlike.ModVersion
 import com.movtery.zalithlauncher.game.addons.modloader.optifine.OptiFineVersion
-import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.components.influencedByBackgroundColor
 import com.movtery.zalithlauncher.ui.components.rememberMaxHeight
-import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
@@ -176,7 +174,6 @@ fun <E> AddonListLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
 ) {
     var selectedItem by remember { mutableStateOf<E?>(null) }
 
@@ -202,12 +199,14 @@ fun <E> AddonListLayout(
     }
 
     Surface(
-        modifier = modifier.backgroundGlass(blur, shape, influencedByBackground),
+        modifier = modifier,
         shape = shape,
         color = color,
         contentColor = contentColor
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             AddonListHeader(
                 modifier = Modifier.fillMaxWidth(),
                 state = state,
@@ -421,17 +420,15 @@ fun AddonWarningItem(
         enabled = true
     ),
     contentColor: Color = MaterialTheme.colorScheme.onErrorContainer,
-    blur: Int = AllSettings.backgroundBlur.state,
 ) {
     Surface(
-        modifier = modifier.backgroundGlass(blur, MaterialTheme.shapes.large),
+        modifier = modifier,
         shape = MaterialTheme.shapes.large,
         color = color,
         contentColor = contentColor
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

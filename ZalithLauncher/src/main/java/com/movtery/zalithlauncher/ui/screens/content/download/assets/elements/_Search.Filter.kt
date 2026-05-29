@@ -79,10 +79,8 @@ import com.movtery.zalithlauncher.game.download.assets.platform.PlatformDisplayL
 import com.movtery.zalithlauncher.game.download.assets.platform.PlatformFilterCode
 import com.movtery.zalithlauncher.game.download.assets.platform.PlatformSortField
 import com.movtery.zalithlauncher.game.download.assets.utils.ModTranslations
-import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
-import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
@@ -405,13 +403,12 @@ fun BaseFilterLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     if (onClick != null) {
         Surface(
-            modifier = modifier.backgroundGlass(blur, shape, influencedByBackground),
+            modifier = modifier,
             shape = shape,
             color = color,
             contentColor = contentColor,
@@ -420,7 +417,7 @@ fun BaseFilterLayout(
         )
     } else {
         Surface(
-            modifier = modifier.backgroundGlass(blur, shape, influencedByBackground),
+            modifier = modifier,
             shape = shape,
             color = color,
             contentColor = contentColor,
