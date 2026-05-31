@@ -1211,4 +1211,8 @@
     <string name="game_vulkan_check_missing_features">Recursos ausentes:</string>
     <string name="game_vulkan_check_unsupp">Seu dispositivo não suporta a execução do minecraft 26.2+ com Vulkan</string>
     <string name="game_vulkan_check_supp">Seu dispositivo é compatível com a execução do minecraft 26.2+ com Vulkan</string>
+    <string name="cape_name_builder">Construtor</string>
+    <string name="cape_name_crafter">Artesão</string>
+    <string name="settings_title_blur">Efeito de Desfoque</string>
+    <string name="settings_launcher_background_blur_summary">Ajuste o efeito de desfoque de fundo. Esta opção consome muito desempenho.</string>
 </resources>
