@@ -475,6 +475,77 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_GLFW_nglfwSetShowingWindow(__attribut
     pojav_environ->showingWindow = (long) window;
 }
 
+static JNIEnv* get_runtime_env_for_android_call(void) {
+    JavaVM* jvm = pojav_environ->runtimeJavaVMPtr;
+    if (jvm == NULL) return NULL;
+
+    JNIEnv *jvm_env = NULL;
+    jint env_result = (*jvm)->GetEnv(jvm, (void**)&jvm_env, JNI_VERSION_1_4);
+    if (env_result == JNI_EDETACHED) {
+        env_result = (*jvm)->AttachCurrentThread(jvm, &jvm_env, NULL);
+    }
+    if (env_result != JNI_OK) return NULL;
+    return jvm_env;
+}
+
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_glfwSetAndroidGamepadPresent(JNIEnv* env, jclass clazz, jboolean present) {
+    JNIEnv *jvm_env = get_runtime_env_for_android_call();
+    if (jvm_env == NULL || pojav_environ->vmGlfwClass == NULL) return;
+
+    jmethodID method = (*jvm_env)->GetStaticMethodID(jvm_env, pojav_environ->vmGlfwClass, "glfwSetAndroidGamepadPresent", "(Z)V");
+    if (method == NULL) {
+        (*jvm_env)->ExceptionClear(jvm_env);
+        return;
+    }
+    (*jvm_env)->CallStaticVoidMethod(jvm_env, pojav_environ->vmGlfwClass, method, present);
+}
+
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_glfwSetAndroidGamepadInfo(JNIEnv* env, jclass clazz, jstring name, jstring guid) {
+    JNIEnv *jvm_env = get_runtime_env_for_android_call();
+    if (jvm_env == NULL || pojav_environ->vmGlfwClass == NULL) return;
+
+    const char *name_chars = name == NULL ? NULL : (*env)->GetStringUTFChars(env, name, NULL);
+    const char *guid_chars = guid == NULL ? NULL : (*env)->GetStringUTFChars(env, guid, NULL);
+    jstring jvm_name = name_chars == NULL ? NULL : (*jvm_env)->NewStringUTF(jvm_env, name_chars);
+    jstring jvm_guid = guid_chars == NULL ? NULL : (*jvm_env)->NewStringUTF(jvm_env, guid_chars);
+
+    jmethodID method = (*jvm_env)->GetStaticMethodID(jvm_env, pojav_environ->vmGlfwClass, "glfwSetAndroidGamepadInfo", "(Ljava/lang/String;Ljava/lang/String;)V");
+    if (method != NULL) {
+        (*jvm_env)->CallStaticVoidMethod(jvm_env, pojav_environ->vmGlfwClass, method, jvm_name, jvm_guid);
+    } else {
+        (*jvm_env)->ExceptionClear(jvm_env);
+    }
+
+    if (jvm_name != NULL) (*jvm_env)->DeleteLocalRef(jvm_env, jvm_name);
+    if (jvm_guid != NULL) (*jvm_env)->DeleteLocalRef(jvm_env, jvm_guid);
+    if (name_chars != NULL) (*env)->ReleaseStringUTFChars(env, name, name_chars);
+    if (guid_chars != NULL) (*env)->ReleaseStringUTFChars(env, guid, guid_chars);
+}
+
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_glfwUpdateAndroidGamepadAxis(JNIEnv* env, jclass clazz, jint axis, jfloat value) {
+    JNIEnv *jvm_env = get_runtime_env_for_android_call();
+    if (jvm_env == NULL || pojav_environ->vmGlfwClass == NULL) return;
+
+    jmethodID method = (*jvm_env)->GetStaticMethodID(jvm_env, pojav_environ->vmGlfwClass, "glfwUpdateAndroidGamepadAxis", "(IF)V");
+    if (method == NULL) {
+        (*jvm_env)->ExceptionClear(jvm_env);
+        return;
+    }
+    (*jvm_env)->CallStaticVoidMethod(jvm_env, pojav_environ->vmGlfwClass, method, axis, value);
+}
+
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_glfwUpdateAndroidGamepadButton(JNIEnv* env, jclass clazz, jint button, jboolean pressed) {
+    JNIEnv *jvm_env = get_runtime_env_for_android_call();
+    if (jvm_env == NULL || pojav_environ->vmGlfwClass == NULL) return;
+
+    jmethodID method = (*jvm_env)->GetStaticMethodID(jvm_env, pojav_environ->vmGlfwClass, "glfwUpdateAndroidGamepadButton", "(IZ)V");
+    if (method == NULL) {
+        (*jvm_env)->ExceptionClear(jvm_env);
+        return;
+    }
+    (*jvm_env)->CallStaticVoidMethod(jvm_env, pojav_environ->vmGlfwClass, method, button, pressed);
+}
+
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetWindowAttrib(__attribute__((unused)) JNIEnv* env, __attribute__((unused)) jclass clazz, jint attrib, jint value) {
     // Check for stack queue no longer necessary here as the JVM crash's origin is resolved
     if (!pojav_environ->showingWindow) {

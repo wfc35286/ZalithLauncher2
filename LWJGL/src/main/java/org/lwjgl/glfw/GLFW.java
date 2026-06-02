@@ -27,8 +27,15 @@ import java.util.*;
 
 public class GLFW
 {
-    static FloatBuffer joystickData = (FloatBuffer)FloatBuffer.allocate(8).flip();
-    static ByteBuffer buttonData = (ByteBuffer)ByteBuffer.allocate(8).flip();
+    static FloatBuffer joystickData = FloatBuffer.allocate(6);
+    static ByteBuffer buttonData = ByteBuffer.allocate(15);
+
+    private static final int ANDROID_GAMEPAD_JID = 0;
+    private static final float[] androidGamepadAxes = new float[] {0f, 0f, 0f, 0f, -1f, -1f};
+    private static final byte[] androidGamepadButtons = new byte[15];
+    private static boolean androidGamepadPresent = true;
+    private static String androidGamepadName = "Android Gamepad";
+    private static String androidGamepadGuid = "android-gamepad-0000";
     /** The major version number of the GLFW library. This is incremented when the API is changed in non-compatible ways. */
     public static final int GLFW_VERSION_MAJOR = 3;
 
@@ -1310,36 +1317,61 @@ public class GLFW
     public static void glfwRequestWindowAttention(@NativeType("GLFWwindow *") long window) {
     }
 
+    public static void glfwSetAndroidGamepadPresent(boolean present) {
+        androidGamepadPresent = present;
+        if (mGLFWJoystickCallback != null) {
+            mGLFWJoystickCallback.invoke(ANDROID_GAMEPAD_JID, present ? GLFW_CONNECTED : GLFW_DISCONNECTED);
+        }
+    }
+
+    public static void glfwSetAndroidGamepadInfo(String name, String guid) {
+        if (name != null && !name.isEmpty()) androidGamepadName = name;
+        if (guid != null && !guid.isEmpty()) androidGamepadGuid = guid;
+    }
+
+    public static void glfwUpdateAndroidGamepadAxis(int axis, float value) {
+        if (axis < 0 || axis >= androidGamepadAxes.length) return;
+        androidGamepadAxes[axis] = Math.max(-1.0f, Math.min(1.0f, value));
+        androidGamepadPresent = true;
+    }
+
+    public static void glfwUpdateAndroidGamepadButton(int button, boolean pressed) {
+        if (button < 0 || button >= androidGamepadButtons.length) return;
+        androidGamepadButtons[button] = (byte) (pressed ? GLFW_PRESS : GLFW_RELEASE);
+        androidGamepadPresent = true;
+    }
+
     public static boolean glfwJoystickPresent(int jid) {
-        if(jid == 0) {
-            return true;
-        }else return false;
+        return jid == ANDROID_GAMEPAD_JID && androidGamepadPresent;
     }
     public static String glfwGetJoystickName(int jid) {
-        if(jid == 0) {
-            return "AIC event bus controller";
-        }else return null;
+        return glfwJoystickPresent(jid) ? androidGamepadName : null;
     }
     public static FloatBuffer glfwGetJoystickAxes(int jid) {
-        if(jid == 0) {
-            return joystickData;
-        }else return null;
+        if (!glfwJoystickPresent(jid)) return null;
+        joystickData.clear();
+        joystickData.put(androidGamepadAxes);
+        joystickData.flip();
+        return joystickData;
     }
     public static ByteBuffer glfwGetJoystickButtons(int jid) {
-        if(jid == 0) {
-            return buttonData;
-        }else return null;
+        if (!glfwJoystickPresent(jid)) return null;
+        buttonData.clear();
+        buttonData.put(androidGamepadButtons);
+        buttonData.flip();
+        return buttonData;
     }
-    public static ByteBuffer glfwGetjoystickHats(int jid) {
+    public static ByteBuffer glfwGetJoystickHats(int jid) {
         return null;
     }
+    public static ByteBuffer glfwGetjoystickHats(int jid) {
+        return glfwGetJoystickHats(jid);
+    }
     public static boolean glfwJoystickIsGamepad(int jid) {
-        if(jid == 0) return true;
-        else return false;
+        return glfwJoystickPresent(jid);
     }
     public static String glfwGetJoystickGUID(int jid) {
-        if(jid == 0) return "aio0";
-        else return null;
+        return glfwJoystickPresent(jid) ? androidGamepadGuid : null;
     }
     public static long glfwGetJoystickUserPointer(int jid) {
         return 0;
@@ -1351,10 +1383,17 @@ public class GLFW
         return false;
     }
     public static String glfwGetGamepadName(int jid) {
-        return null;
+        return glfwJoystickPresent(jid) ? androidGamepadName : null;
     }
     public static boolean glfwGetGamepadState(int jid, GLFWGamepadState state) {
-        return false;
+        if (!glfwJoystickPresent(jid) || state == null) return false;
+        for (int i = 0; i < androidGamepadButtons.length; i++) {
+            state.buttons(i, androidGamepadButtons[i]);
+        }
+        for (int i = 0; i < androidGamepadAxes.length; i++) {
+            state.axes(i, androidGamepadAxes[i]);
+        }
+        return true;
     }
 
     /** Array version of: {@link #glfwGetVersion GetVersion} */

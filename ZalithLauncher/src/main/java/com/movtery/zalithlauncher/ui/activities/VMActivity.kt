@@ -26,6 +26,7 @@ import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -557,8 +558,88 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         }
     }
 
+    private fun isAndroidGamepadEvent(source: Int, device: InputDevice?): Boolean {
+        return (source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+                (source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+                (source and InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD ||
+                device?.supportsSource(InputDevice.SOURCE_GAMEPAD) == true ||
+                device?.supportsSource(InputDevice.SOURCE_JOYSTICK) == true
+    }
+
+    private fun updateGlfwGamepadInfo(device: InputDevice?) {
+        device ?: return
+        CallbackBridge.glfwSetAndroidGamepadInfo(
+            device.name ?: "Android Gamepad",
+            device.descriptor ?: "android-gamepad-${device.id}"
+        )
+        CallbackBridge.glfwSetAndroidGamepadPresent(true)
+    }
+
+    private fun updateGlfwGamepadKey(event: KeyEvent) {
+        if (!isAndroidGamepadEvent(event.source, event.device)) return
+        updateGlfwGamepadInfo(event.device)
+
+        val pressed = event.action == KeyEvent.ACTION_DOWN
+        val button = when (event.keyCode) {
+            KeyEvent.KEYCODE_BUTTON_A -> CallbackBridge.GLFW_GAMEPAD_BUTTON_A
+            KeyEvent.KEYCODE_BUTTON_B -> CallbackBridge.GLFW_GAMEPAD_BUTTON_B
+            KeyEvent.KEYCODE_BUTTON_X -> CallbackBridge.GLFW_GAMEPAD_BUTTON_X
+            KeyEvent.KEYCODE_BUTTON_Y -> CallbackBridge.GLFW_GAMEPAD_BUTTON_Y
+            KeyEvent.KEYCODE_BUTTON_L1 -> CallbackBridge.GLFW_GAMEPAD_BUTTON_LEFT_BUMPER
+            KeyEvent.KEYCODE_BUTTON_R1 -> CallbackBridge.GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER
+            KeyEvent.KEYCODE_BUTTON_SELECT -> CallbackBridge.GLFW_GAMEPAD_BUTTON_BACK
+            KeyEvent.KEYCODE_BUTTON_START -> CallbackBridge.GLFW_GAMEPAD_BUTTON_START
+            KeyEvent.KEYCODE_BUTTON_MODE -> CallbackBridge.GLFW_GAMEPAD_BUTTON_GUIDE
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> CallbackBridge.GLFW_GAMEPAD_BUTTON_LEFT_THUMB
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> CallbackBridge.GLFW_GAMEPAD_BUTTON_RIGHT_THUMB
+            KeyEvent.KEYCODE_DPAD_UP -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP
+            KeyEvent.KEYCODE_DPAD_RIGHT -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT
+            KeyEvent.KEYCODE_DPAD_DOWN -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN
+            KeyEvent.KEYCODE_DPAD_LEFT -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT
+            else -> -1
+        }
+        if (button >= 0) CallbackBridge.glfwUpdateAndroidGamepadButton(button, pressed)
+    }
+
+    private fun MotionEvent.axis(axis: Int): Float = getAxisValue(axis)
+
+    private fun updateGlfwGamepadMotion(event: MotionEvent): Boolean {
+        if (!isAndroidGamepadEvent(event.source, event.device) || event.action != MotionEvent.ACTION_MOVE) return false
+        updateGlfwGamepadInfo(event.device)
+
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_X, event.axis(MotionEvent.AXIS_X))
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_Y, event.axis(MotionEvent.AXIS_Y))
+
+        val rx = event.axis(MotionEvent.AXIS_RX)
+        val ry = event.axis(MotionEvent.AXIS_RY)
+        val z = event.axis(MotionEvent.AXIS_Z)
+        val rz = event.axis(MotionEvent.AXIS_RZ)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_X, if (kotlin.math.abs(rx) > kotlin.math.abs(z)) rx else z)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_Y, if (kotlin.math.abs(ry) > kotlin.math.abs(rz)) ry else rz)
+
+        val leftTrigger = maxOf(event.axis(MotionEvent.AXIS_LTRIGGER), event.axis(MotionEvent.AXIS_BRAKE))
+        val rightTrigger = maxOf(event.axis(MotionEvent.AXIS_RTRIGGER), event.axis(MotionEvent.AXIS_GAS), event.axis(MotionEvent.AXIS_THROTTLE))
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, leftTrigger * 2f - 1f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, rightTrigger * 2f - 1f)
+
+        val hatX = event.axis(MotionEvent.AXIS_HAT_X)
+        val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, hatX < -0.5f)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, hatX > 0.5f)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, hatY < -0.5f)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, hatY > 0.5f)
+
+        return true
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        updateGlfwGamepadMotion(event)
+        return super.dispatchGenericMotionEvent(event)
+    }
+
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        updateGlfwGamepadKey(event)
         if (!vmViewModel.keyHandle) return super.dispatchKeyEvent(event)
 
         val isPressed = event.action == KeyEvent.ACTION_DOWN
