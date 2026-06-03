@@ -575,8 +575,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwSetAndroidGamepadPresent(true)
     }
 
-    private fun updateGlfwGamepadKey(event: KeyEvent) {
-        if (!isAndroidGamepadEvent(event.source, event.device)) return
+    private fun updateGlfwGamepadKey(event: KeyEvent): Boolean {
+        if (!isAndroidGamepadEvent(event.source, event.device)) return false
         updateGlfwGamepadInfo(event.device)
 
         val pressed = event.action == KeyEvent.ACTION_DOWN
@@ -599,6 +599,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
             else -> -1
         }
         if (button >= 0) CallbackBridge.glfwUpdateAndroidGamepadButton(button, pressed)
+        return button >= 0
     }
 
     private fun MotionEvent.axis(axis: Int): Float = getAxisValue(axis)
@@ -622,12 +623,14 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, leftTrigger * 2f - 1f)
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, rightTrigger * 2f - 1f)
 
-        val hatX = event.axis(MotionEvent.AXIS_HAT_X)
-        val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, hatX < -0.5f)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, hatX > 0.5f)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, hatY < -0.5f)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, hatY > 0.5f)
+        // Do not synthesize GLFW d-pad buttons from AXIS_HAT_X / AXIS_HAT_Y here.
+        // Some Android controllers report left-stick movement on hat axes as well, which makes
+        // Controlify think the d-pad is pressed while the left stick is being moved.
+        // Physical d-pad buttons are still forwarded in updateGlfwGamepadKey() via KEYCODE_DPAD_*.
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, false)
 
         return true
     }
@@ -639,7 +642,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        updateGlfwGamepadKey(event)
+        val isGlfwGamepadKey = updateGlfwGamepadKey(event)
+        if (isGlfwGamepadKey) return true
         if (!vmViewModel.keyHandle) return super.dispatchKeyEvent(event)
 
         val isPressed = event.action == KeyEvent.ACTION_DOWN
