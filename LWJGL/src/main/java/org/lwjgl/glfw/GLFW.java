@@ -35,6 +35,7 @@ public class GLFW
     private static final float[] androidGamepadAxes = new float[] {0f, 0f, 0f, 0f, -1f, -1f};
     private static final byte[] androidGamepadButtons = new byte[15];
     private static boolean androidGamepadPresent = false;
+    private static int androidGamepadPendingConnectionEvent = 0;
     private static String androidGamepadName = "Android Gamepad";
     private static String androidGamepadGuid = "android-gamepad-0000";
     /** The major version number of the GLFW library. This is incremented when the API is changed in non-compatible ways. */
@@ -1191,6 +1192,13 @@ public class GLFW
         // Prevent these with this code.
         if(mGLFWInputPumping) return;
         mGLFWInputPumping = true;
+        if (androidGamepadPendingConnectionEvent != 0) {
+            int event = androidGamepadPendingConnectionEvent;
+            androidGamepadPendingConnectionEvent = 0;
+            if (mGLFWJoystickCallback != null) {
+                mGLFWJoystickCallback.invoke(ANDROID_GAMEPAD_JID, event);
+            }
+        }
         callV(Functions.StartPumping);
         for (Long ptr : mGLFWWindowMap.keySet()) callJV(ptr, Functions.PumpEvents);
         callV(Functions.StopPumping);
@@ -1321,9 +1329,7 @@ public class GLFW
     public static void glfwSetAndroidGamepadPresent(boolean present) {
         if (androidGamepadPresent == present) return;
         androidGamepadPresent = present;
-        if (mGLFWJoystickCallback != null) {
-            mGLFWJoystickCallback.invoke(ANDROID_GAMEPAD_JID, present ? GLFW_CONNECTED : GLFW_DISCONNECTED);
-        }
+        androidGamepadPendingConnectionEvent = present ? GLFW_CONNECTED : GLFW_DISCONNECTED;
     }
 
     public static void glfwSetAndroidGamepadInfo(String name, String guid) {
