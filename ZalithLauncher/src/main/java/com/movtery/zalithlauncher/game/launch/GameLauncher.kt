@@ -58,6 +58,10 @@ import com.movtery.zalithlauncher.utils.string.isBiggerTo
 import com.movtery.zalithlauncher.utils.string.isEqualTo
 import org.lwjgl.glfw.CallbackBridge
 import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
@@ -198,6 +202,7 @@ class GameLauncher(
 
         val gameDirPath = version.getGameDir()
 
+        patchControlifyMerchantScreenMixin(gameDirPath)
         disableSplash(gameDirPath)
 
         //初始化运行环境
@@ -229,7 +234,6 @@ class GameLauncher(
             screenSize = screenSize
         )
     }
-
     private fun tryStartTouchProxy() {
         if (version.enableTouchProxy) {
             ControllerProxy.startProxy(
@@ -239,6 +243,69 @@ class GameLauncher(
             )
         }
     }
+
+    private fun patchControlifyMerchantScreenMixin(gameDirPath: File) {
+        val modsDir = File(gameDirPath, "mods")
+        if (!modsDir.isDirectory) return
+        val controlifyJar = modsDir.listFiles()?.firstOrNull { file ->
+            file.isFile && file.name.startsWith("controlify-") && file.name.endsWith(".jar")
+        } ?: return
+
+        val marker = File(controlifyJar.parentFile, ".${controlifyJar.name}.merchant-mixin-patched")
+        if (marker.exists() && marker.lastModified() >= controlifyJar.lastModified()) return
+
+        val targetMixin = "feature.screenop.vanilla.MerchantScreenMixin"
+        val mixinConfig = "controlify.mixins.json"
+        val backup = File(controlifyJar.parentFile, "${controlifyJar.name}.bak-merchant-mixin")
+        val tempJar = File(controlifyJar.parentFile, "${controlifyJar.name}.tmp")
+
+        runCatching {
+            if (!backup.exists()) controlifyJar.copyTo(backup, overwrite = false)
+            var changed = false
+
+            ZipInputStream(controlifyJar.inputStream().buffered()).use { input ->
+                ZipOutputStream(FileOutputStream(tempJar).buffered()).use { output ->
+                    var entry = input.nextEntry
+                    while (entry != null) {
+                        val bytes = input.readBytes()
+                        val outBytes = if (entry.name == mixinConfig) {
+                            val text = bytes.toString(Charsets.UTF_8)
+                            val patched = text
+                                .replace("    \"$targetMixin\",\n", "")
+                                .replace("    \"$targetMixin\"\n", "")
+                                .replace("    \"$targetMixin\",\r\n", "")
+                                .replace("    \"$targetMixin\"\r\n", "")
+                            if (patched != text) changed = true
+                            patched.toByteArray(Charsets.UTF_8)
+                        } else {
+                            bytes
+                        }
+
+                        val newEntry = ZipEntry(entry.name)
+                        output.putNextEntry(newEntry)
+                        output.write(outBytes)
+                        output.closeEntry()
+                        input.closeEntry()
+                        entry = input.nextEntry
+                    }
+                }
+            }
+
+            if (changed) {
+                if (!controlifyJar.delete()) throw IllegalStateException("Failed to delete old Controlify jar")
+                if (!tempJar.renameTo(controlifyJar)) throw IllegalStateException("Failed to replace Controlify jar")
+                marker.writeText("patched")
+                Logger.info(TAG, "Patched Controlify MerchantScreenMixin: ${controlifyJar.absolutePath}")
+            } else {
+                tempJar.delete()
+                marker.writeText("already patched")
+            }
+        }.onFailure { e ->
+            tempJar.delete()
+            Logger.warning(TAG, "Failed to patch Controlify MerchantScreenMixin", e)
+        }
+    }
+
 
     private fun printLauncherInfo(
         javaArguments: String,

@@ -444,6 +444,26 @@ object AllSettings : SettingsRegistry() {
      */
     val controlLayout = stringSetting("controlLayout", "")
 
+    /**
+     * OpenAI 兼容 AI API 地址
+     */
+    val aiApiBaseUrl = stringSetting("aiApiBaseUrl", "")
+
+    /**
+     * OpenAI 兼容 AI API Key
+     */
+    val aiApiKey = stringSetting("aiApiKey", "")
+
+    /**
+     * 崩溃日志分析默认模型
+     */
+    val aiCrashAnalyzeModel = stringSetting("aiCrashAnalyzeModel", "")
+
+    /**
+     * 是否启用崩溃日志 AI 分析入口
+     */
+    val aiCrashAnalyzeEnabled = boolSetting("aiCrashAnalyzeEnabled", false)
+
     //Other
     /**
      * 当前选择的账号

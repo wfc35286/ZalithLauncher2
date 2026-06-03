@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,11 +57,13 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.movtery.colorpicker.rememberColorPickerController
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.contract.MediaPickerContract
+import com.movtery.zalithlauncher.crashlogs.OpenAiCrashAnalyzer
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.path.PathManager
@@ -100,6 +105,7 @@ import com.movtery.zalithlauncher.viewmodel.EventViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalHomePageViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 private const val TAG = "LauncherSettingsScreen"
@@ -210,6 +216,131 @@ fun LauncherSettingsScreen(
                         title = stringResource(R.string.settings_launcher_full_screen_title),
                         summary = stringResource(R.string.settings_launcher_full_screen_summary)
                     )
+                }
+            }
+
+            AnimatedItem(scope) { yOffset ->
+                val coroutineScope = rememberCoroutineScope()
+                var testStatus by remember { mutableStateOf("") }
+                var testing by remember { mutableStateOf(false) }
+                var models by remember { mutableStateOf(emptyList<String>()) }
+                var modelMenuExpanded by remember { mutableStateOf(false) }
+                val aiEnabled = AllSettings.aiCrashAnalyzeEnabled.state
+                SettingsCardColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                ) {
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = if (aiEnabled) CardPosition.Top else CardPosition.Single,
+                        unit = AllSettings.aiCrashAnalyzeEnabled,
+                        title = "启用 AI 崩溃日志分析",
+                        summary = "在崩溃报错页面显示 AI 分析入口"
+                    )
+                    if (aiEnabled) {
+                        SettingsCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            position = CardPosition.Middle
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OwnOutlinedTextField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    value = AllSettings.aiApiBaseUrl.state,
+                                    onValueChange = { AllSettings.aiApiBaseUrl.save(it) },
+                                    singleLine = true,
+                                    label = { Text("OpenAI 兼容 API 地址") }
+                                )
+                                OwnOutlinedTextField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    value = AllSettings.aiApiKey.state,
+                                    onValueChange = { AllSettings.aiApiKey.save(it) },
+                                    singleLine = true,
+                                    visualTransformation = PasswordVisualTransformation(),
+                                    label = { Text("API Key") }
+                                )
+
+                                val selectedModel = AllSettings.aiCrashAnalyzeModel.state
+                                FilledTonalButton(
+                                    enabled = models.isNotEmpty(),
+                                    onClick = { modelMenuExpanded = true }
+                                ) {
+                                    Text(if (selectedModel.isBlank()) "选择模型" else "模型：$selectedModel")
+                                }
+                                DropdownMenu(
+                                    expanded = modelMenuExpanded,
+                                    onDismissRequest = { modelMenuExpanded = false }
+                                ) {
+                                    models.forEach { model ->
+                                        DropdownMenuItem(
+                                            text = { Text(model) },
+                                            onClick = {
+                                                AllSettings.aiCrashAnalyzeModel.save(model)
+                                                modelMenuExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        SettingsCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            position = CardPosition.Bottom
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilledTonalButton(
+                                    enabled = !testing,
+                                    onClick = {
+                                        val baseUrl = AllSettings.aiApiBaseUrl.state
+                                        val apiKey = AllSettings.aiApiKey.state
+                                        if (baseUrl.isBlank() || apiKey.isBlank()) {
+                                            testStatus = "请先填写 API 地址和 Key"
+                                        } else {
+                                            testing = true
+                                            testStatus = "正在测试并获取模型……"
+                                            coroutineScope.launch {
+                                                runCatching {
+                                                    OpenAiCrashAnalyzer.listModels(baseUrl, apiKey)
+                                                }.onSuccess { remoteModels ->
+                                                    models = remoteModels
+                                                    testStatus = if (remoteModels.isEmpty()) {
+                                                        "连接成功，但没有返回模型列表"
+                                                    } else {
+                                                        if (AllSettings.aiCrashAnalyzeModel.state !in remoteModels) {
+                                                            AllSettings.aiCrashAnalyzeModel.save(remoteModels.first())
+                                                        }
+                                                        "连接成功，已获取 ${remoteModels.size} 个模型，请点击模型按钮选择。"
+                                                    }
+                                                }.onFailure { e ->
+                                                    models = emptyList()
+                                                    testStatus = "测试失败：${e.localizedMessage ?: e.message ?: e}"
+                                                }
+                                                testing = false
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Text("测试连接 / 获取模型")
+                                }
+                                if (testStatus.isNotBlank()) {
+                                    Text(
+                                        text = testStatus,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
