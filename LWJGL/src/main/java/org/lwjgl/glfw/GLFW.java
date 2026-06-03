@@ -1319,6 +1319,7 @@ public class GLFW
     }
 
     public static void glfwSetAndroidGamepadPresent(boolean present) {
+        if (androidGamepadPresent == present) return;
         androidGamepadPresent = present;
         if (mGLFWJoystickCallback != null) {
             mGLFWJoystickCallback.invoke(ANDROID_GAMEPAD_JID, present ? GLFW_CONNECTED : GLFW_DISCONNECTED);
