@@ -2,6 +2,15 @@ name: Build APK
 
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: true
+        default: "Release"
+        type: choice
+        options:
+          - Release
+          - Debug
   workflow_call:
     inputs:
       variant:
@@ -15,6 +24,10 @@ on:
       OAUTH_CLIENT_ID:
         required: false
       CURSEFORGE_API_KEY:
+        required: false
+      RELEASE_JKS_BASE64:
+        required: false
+      RELEASE_KEY_ALIAS:
         required: false
 
 jobs:
@@ -31,6 +44,8 @@ jobs:
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      RELEASE_JKS_BASE64: ${{ secrets.RELEASE_JKS_BASE64 }}
+      RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
 
     steps:
       - name: Checkout
@@ -49,23 +64,59 @@ jobs:
         with:
           add-job-summary: "on-failure"
 
+      - name: Patch LWJGL classes jar
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lwjgl-patch
+          javac -source 8 -target 8 \
+            -cp "ZalithLauncher/src/main/assets/components/lwjgl3/lwjgl-glfw-classes.jar:LWJGL/libs/*:LWJGL/compileOnly/*" \
+            -d /tmp/lwjgl-patch \
+            LWJGL/src/main/java/com/movtery/zalithlauncher/CursorRegistry.java \
+            LWJGL/src/main/java/org/lwjgl/glfw/GLFW.java
+          jar uf ZalithLauncher/src/main/assets/components/lwjgl3/lwjgl-glfw-classes.jar -C /tmp/lwjgl-patch .
+          date +%s%3N > ZalithLauncher/src/main/assets/components/lwjgl3/version
+
+      - name: Prepare release keystore
+        if: inputs.variant == 'Release' && env.RELEASE_JKS_BASE64 != ''
+        run: |
+          printf '%s' "$RELEASE_JKS_BASE64" | base64 -d > release.jks
+          ls -l release.jks
+
       - name: Build APK for ${{ matrix.arch }}
         run: |
           chmod +x gradlew
-          ./gradlew ZalithLauncher:assemble${{ inputs.variant }} -Darch=${{ matrix.arch }}
+          EXTRA_ARGS=""
+          if [ "${{ inputs.variant }}" = "Release" ]; then
+            if [ -f release.jks ]; then
+              EXTRA_ARGS="$EXTRA_ARGS -Prelease_store_file=$PWD/release.jks"
+            fi
+            if [ -n "${RELEASE_KEY_ALIAS:-}" ]; then
+              EXTRA_ARGS="$EXTRA_ARGS -Prelease_key_alias=$RELEASE_KEY_ALIAS"
+            fi
+          fi
+          ./gradlew ZalithLauncher:assemble${{ inputs.variant }} -Darch=${{ matrix.arch }} $EXTRA_ARGS
+
+      - name: List APK outputs for ${{ matrix.arch }}
+        if: always()
+        run: |
+          find ZalithLauncher/build/outputs -type f | sort || true
 
       - name: Upload Release APK for ${{ matrix.arch }}
         if: inputs.variant == 'Release'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: release apk (${{ matrix.arch }})
-          path: ZalithLauncher/build/outputs/apk/release/*.apk
+          name: release-apk-${{ matrix.arch }}
+          path: |
+            ZalithLauncher/build/outputs/apk/release/*.apk
+            ZalithLauncher/build/outputs/apk/*/release/*.apk
+          if-no-files-found: error
 
       - name: Upload Debug APK for ${{ matrix.arch }}
         if: inputs.variant == 'Debug'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: debug apk (${{ matrix.arch }})
-          path: ZalithLauncher/build/outputs/apk/debug/*.apk
+          name: debug-apk-${{ matrix.arch }}
+          path: |
+            ZalithLauncher/build/outputs/apk/debug/*.apk
+            ZalithLauncher/build/outputs/apk/*/debug/*.apk
+          if-no-files-found: error

@@ -12,15 +12,18 @@
     @androidx.room.* <methods>;
 }
 
-# Launcher
--keep class org.lwjgl.glfw.CallbackBridge {
-    *;
-}
--keep class com.oracle.dalvik.VMLauncher {
-    *;
-}
+# JNI / reflection entry points
+-keep class com.movtery.zalithlauncher.bridge.ZLBridge { *; }
+-keep class com.movtery.zalithlauncher.bridge.LoggerBridge { *; }
+-keep class com.movtery.zalithlauncher.bridge.LoggerBridge$* { *; }
+-keep class com.movtery.zalithlauncher.bridge.NativeLibraryLoader { *; }
+-keep class com.oracle.dalvik.VMLauncher { *; }
+-keep class org.lwjgl.glfw.CallbackBridge { *; }
+-keep class org.lwjgl.glfw.CallbackBridge$* { *; }
+-keep class com.movtery.zalithlauncher.game.input.CriticalNativeTest { *; }
 
-#
+# Launcher
+-keep class com.movtery.zalithlauncher.bridge.** { *; }
 ## Hilt
 #-keep class dagger.hilt.** { *; }
 #-keep class javax.inject.** { *; }

@@ -13,6 +13,9 @@ plugins {
 }
 
 val zalithPackageName = "com.movtery.zalithlauncher"
+val releaseApplicationIdSuffix = project.findProperty("release_application_id_suffix") as? String ?: ".wfc"
+val releaseStoreFile = project.findProperty("release_store_file") as? String ?: "zalith_launcher.jks"
+val releaseKeyAlias = project.findProperty("release_key_alias") as? String ?: System.getenv("RELEASE_KEY_ALIAS") ?: error("Release key alias is not set. Pass -Prelease_key_alias or set RELEASE_KEY_ALIAS.")
 val launcherAPPName = project.findProperty("launcher_app_name") as? String ?: error("The \"launcher_app_name\" property is not set in gradle.properties.")
 val launcherName = project.findProperty("launcher_name") as? String ?: error("The \"launcher_name\" property is not set in gradle.properties.")
 val launcherShortName = project.findProperty("launcher_short_name") as? String ?: error("The \"launcher_short_name\" property is not set in gradle.properties.")
@@ -43,9 +46,9 @@ android {
 
     signingConfigs {
         create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
+            storeFile = file(releaseStoreFile)
             storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
+            keyAlias = releaseKeyAlias
             keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
         }
         create("debugBuild") {
@@ -70,6 +73,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            applicationIdSuffix = releaseApplicationIdSuffix
             signingConfig = signingConfigs.getByName("releaseBuild")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
