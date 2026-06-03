@@ -738,9 +738,9 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         val hatX = event.axis(MotionEvent.AXIS_HAT_X)
         val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
         logGamepadMotionEvent(event, leftX, leftY, hatX, hatY)
+
         if (kotlin.math.abs(leftX) > 0.15f || kotlin.math.abs(leftY) > 0.15f) {
             lastLeftStickMotionTime = System.nanoTime()
-            releaseGlfwDpadButtons()
         }
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_X, leftX)
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_Y, leftY)
