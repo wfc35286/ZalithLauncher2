@@ -24,6 +24,9 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.SurfaceTexture
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.SparseBooleanArray
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -592,6 +595,13 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         }
     }
 
+    private fun isSyntheticDpadKeyEvent(event: KeyEvent): Boolean {
+        // Some Android gamepads synthesize DPAD KeyEvents from left-stick movement.
+        // Do not reject FLAG_FALLBACK by itself: on some controllers the real d-pad is also
+        // reported as fallback. Only suppress DPAD keys while the left stick is actively moving.
+        return !event.isFromSource(InputDevice.SOURCE_DPAD) && isSuppressingSyntheticDpad
+    }
+
     private var lastLeftStickMotionTime = 0L
     private val isSuppressingSyntheticDpad: Boolean
         get() = System.nanoTime() - lastLeftStickMotionTime < 200_000_000L
@@ -608,8 +618,13 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         updateGlfwGamepadInfo(event.device)
 
         val pressed = event.action == KeyEvent.ACTION_DOWN
-        if (isAndroidDpadKey(event.keyCode) && isSuppressingSyntheticDpad) {
-            releaseGlfwDpadButtons()
+        if (isAndroidDpadKey(event.keyCode)) {
+            val button = dpadKeyToGlfwButton(event.keyCode)
+            if (isSyntheticDpadKeyEvent(event)) {
+                CallbackBridge.glfwUpdateAndroidGamepadButton(button, false)
+                return true
+            }
+            CallbackBridge.glfwUpdateAndroidGamepadButton(button, pressed)
             return true
         }
 
