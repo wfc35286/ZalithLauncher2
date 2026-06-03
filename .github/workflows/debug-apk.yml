@@ -42,13 +42,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build patched LWJGL classes jar
+      - name: Patch LWJGL classes jar
         run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon :LWJGL:jar
+          set -euo pipefail
+          mkdir -p /tmp/lwjgl-patch
+          javac -source 8 -target 8 \
+            -cp "ZalithLauncher/src/main/assets/components/lwjgl3/lwjgl-glfw-classes.jar:LWJGL/libs/*:LWJGL/compileOnly/*" \
+            -d /tmp/lwjgl-patch \
+            LWJGL/src/main/java/com/movtery/zalithlauncher/CursorRegistry.java \
+            LWJGL/src/main/java/org/lwjgl/glfw/GLFW.java
+          jar uf ZalithLauncher/src/main/assets/components/lwjgl3/lwjgl-glfw-classes.jar -C /tmp/lwjgl-patch .
+          date +%s%3N > ZalithLauncher/src/main/assets/components/lwjgl3/version
 
       - name: Build Debug APK
         run: |
+          chmod +x gradlew
           ./gradlew --no-daemon :ZalithLauncher:assembleDebug -Darch=${{ inputs.arch }}
 
       - name: List APK outputs
