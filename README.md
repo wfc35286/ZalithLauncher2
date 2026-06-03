@@ -1,28 +1,38 @@
-# Zalith Launcher 2
-![Downloads](https://img.shields.io/github/downloads/ZalithLauncher/ZalithLauncher2/total)
-[![Sponsor](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors)](https://afdian.com/a/MovTery)
+# Zalith Launcher 2 - WFC Personal Fork
 
 [简体中文](README_ZH_CN.md) | [繁體中文](README_ZH_TW.md)
 
-
 > [!IMPORTANT]
-> This project is **completely separate** from [ZalithLauncher](https://github.com/ZalithLauncher/ZalithLauncher).  
+> This repository is an **unofficial personal fork** of [ZalithLauncher/ZalithLauncher2](https://github.com/ZalithLauncher/ZalithLauncher2), maintained at [wfc35286/ZalithLauncher2](https://github.com/wfc35286/ZalithLauncher2).  
+> It is mainly customized for my own usage habits and device environment. It is **not an official Zalith Launcher 2 release channel**.
 
-**Zalith Launcher 2** is a newly designed launcher for **Android devices** tailored for [Minecraft: Java Edition](https://www.minecraft.net/). The project uses [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/tree/v3_openjdk/app_pojavlauncher/src/main/jni) as its core launching engine and features a modern UI built with **Jetpack Compose** and **Material Design 3**.  
-We are currently building our official website [zalithlauncher.cn](https://zalithlauncher.cn)  
-Additionally, we are aware that a third-party website has been set up using the name “Zalith Launcher”, appearing to be official. Please note: **this site was not created by us**. It exploits the name to display ads for profit. We **do not participate in, endorse, or trust** such content.  
-Please stay vigilant and **protect your personal privacy**!  
+## About this fork
 
-[Discord Server Shutdown Announcement](/.github/notice/DiscordStatus.md)  
+This fork is based on **Zalith Launcher 2**, an Android launcher for [Minecraft: Java Edition](https://www.minecraft.net/) using the PojavLauncher launching core, Jetpack Compose, and Material Design 3.
 
-## 🌐 Language and Translation Support
+The changes in this repository are mostly personal adaptations, including but not limited to:
 
-We are using the Weblate platform to translate Zalith Launcher 2. You're welcome to join our [Weblate project](https://hosted.weblate.org/projects/zalithlauncher2) and contribute to the translations!  
-Thank you to every language contributor for helping make Zalith Launcher 2 more multilingual and global!
+- controller/gamepad compatibility experiments, especially for Controlify on Android;
+- launcher package/signing adjustments for coexistence with the upstream app;
+- small UI and workflow changes for personal use;
+- crash log analysis experiments using an OpenAI-compatible API;
+- compatibility patches for some Minecraft/mod combinations encountered in my own environment.
 
-## 📦 Build Instructions (For Developers)
+This repository does **not** publish GitHub Releases. If you want a stable public version, please use the upstream project.
 
-> The following section is for developers who wish to contribute or build the project locally.
+## Acknowledgements
+
+Special thanks to the original project and its contributors:
+
+- Upstream repository: [ZalithLauncher/ZalithLauncher2](https://github.com/ZalithLauncher/ZalithLauncher2)
+- Original Zalith Launcher project: [ZalithLauncher/ZalithLauncher](https://github.com/ZalithLauncher/ZalithLauncher)
+- PojavLauncher project: [PojavLauncherTeam/PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher)
+
+All original copyright notices and GPLv3 additional terms are retained.
+
+## 📦 Build Instructions
+
+> This repository is intended for developers or personal builds. No prebuilt APKs are provided here.
 
 ### Requirements
 
@@ -35,7 +45,7 @@ Thank you to every language contributor for helping make Zalith Launcher 2 more 
 ### Build Steps
 
 ```bash
-git clone git@github.com:ZalithLauncher/ZalithLauncher2.git
+git clone git@github.com:wfc35286/ZalithLauncher2.git
 # Open the project in Android Studio and build
 ```
 
