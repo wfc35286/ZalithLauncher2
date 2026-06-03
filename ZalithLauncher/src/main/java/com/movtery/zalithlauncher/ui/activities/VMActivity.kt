@@ -575,11 +575,44 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwSetAndroidGamepadPresent(true)
     }
 
+    private fun isAndroidDpadKey(keyCode: Int): Boolean {
+        return keyCode == KeyEvent.KEYCODE_DPAD_UP ||
+                keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||
+                keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
+                keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+    }
+
+    private fun dpadKeyToGlfwButton(keyCode: Int): Int {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP
+            KeyEvent.KEYCODE_DPAD_RIGHT -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT
+            KeyEvent.KEYCODE_DPAD_DOWN -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN
+            KeyEvent.KEYCODE_DPAD_LEFT -> CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT
+            else -> -1
+        }
+    }
+
+    private var lastLeftStickMotionTime = 0L
+    private val isSuppressingSyntheticDpad: Boolean
+        get() = System.nanoTime() - lastLeftStickMotionTime < 200_000_000L
+
+    private fun releaseGlfwDpadButtons() {
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, false)
+        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, false)
+    }
+
     private fun updateGlfwGamepadKey(event: KeyEvent): Boolean {
         if (!isAndroidGamepadEvent(event.source, event.device)) return false
         updateGlfwGamepadInfo(event.device)
 
         val pressed = event.action == KeyEvent.ACTION_DOWN
+        if (isAndroidDpadKey(event.keyCode) && isSuppressingSyntheticDpad) {
+            releaseGlfwDpadButtons()
+            return true
+        }
+
         val button = when (event.keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> CallbackBridge.GLFW_GAMEPAD_BUTTON_A
             KeyEvent.KEYCODE_BUTTON_B -> CallbackBridge.GLFW_GAMEPAD_BUTTON_B
@@ -608,8 +641,14 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         if (!isAndroidGamepadEvent(event.source, event.device) || event.action != MotionEvent.ACTION_MOVE) return false
         updateGlfwGamepadInfo(event.device)
 
-        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_X, event.axis(MotionEvent.AXIS_X))
-        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_Y, event.axis(MotionEvent.AXIS_Y))
+        val leftX = event.axis(MotionEvent.AXIS_X)
+        val leftY = event.axis(MotionEvent.AXIS_Y)
+        if (kotlin.math.abs(leftX) > 0.15f || kotlin.math.abs(leftY) > 0.15f) {
+            lastLeftStickMotionTime = System.nanoTime()
+            releaseGlfwDpadButtons()
+        }
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_X, leftX)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_Y, leftY)
 
         val rx = event.axis(MotionEvent.AXIS_RX)
         val ry = event.axis(MotionEvent.AXIS_RY)
