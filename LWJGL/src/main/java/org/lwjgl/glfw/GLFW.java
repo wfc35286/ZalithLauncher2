@@ -33,7 +33,7 @@ public class GLFW
     private static final int ANDROID_GAMEPAD_JID = 0;
     private static final float[] androidGamepadAxes = new float[] {0f, 0f, 0f, 0f, -1f, -1f};
     private static final byte[] androidGamepadButtons = new byte[15];
-    private static boolean androidGamepadPresent = true;
+    private static boolean androidGamepadPresent = false;
     private static String androidGamepadName = "Android Gamepad";
     private static String androidGamepadGuid = "android-gamepad-0000";
     /** The major version number of the GLFW library. This is incremented when the API is changed in non-compatible ways. */
