@@ -26,6 +26,7 @@ import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.util.SparseBooleanArray
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -606,8 +607,31 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
     private val dpadHandler = Handler(Looper.getMainLooper())
     private val pendingDpadButtons = SparseBooleanArray()
     private val forwardedDpadButtons = SparseBooleanArray()
+    private val keyDpadButtons = SparseBooleanArray()
+    private val hatDpadButtons = SparseBooleanArray()
     private val isSuppressingSyntheticDpad: Boolean
         get() = System.nanoTime() - lastLeftStickMotionTime < 350_000_000L
+
+    private fun setGlfwDpadButton(button: Int) {
+        CallbackBridge.glfwUpdateAndroidGamepadButton(button, keyDpadButtons[button] || hatDpadButtons[button])
+    }
+
+    private fun setHatDpadButton(button: Int, pressed: Boolean) {
+        if (pressed) {
+            hatDpadButtons.put(button, true)
+        } else {
+            hatDpadButtons.delete(button)
+        }
+        setGlfwDpadButton(button)
+    }
+
+    private fun clearHatDpadButtons() {
+        hatDpadButtons.clear()
+        setGlfwDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT)
+        setGlfwDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT)
+        setGlfwDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP)
+        setGlfwDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN)
+    }
 
     private fun releaseGlfwDpadButtons() {
         CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, false)
@@ -616,17 +640,59 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, false)
         pendingDpadButtons.clear()
         forwardedDpadButtons.clear()
+        keyDpadButtons.clear()
+        hatDpadButtons.clear()
+    }
+
+    private var lastGamepadMotionLogTime = 0L
+
+    private fun logGamepadKeyEvent(event: KeyEvent, button: Int) {
+        Log.d(
+            "ZLGamepadBridge",
+            "KEY dpad key=${KeyEvent.keyCodeToString(event.keyCode)} button=$button action=${event.action} " +
+                    "down=${event.action == KeyEvent.ACTION_DOWN} repeat=${event.repeatCount} " +
+                    "source=0x${Integer.toHexString(event.source)} flags=0x${Integer.toHexString(event.flags)} " +
+                    "scanCode=${event.scanCode} deviceId=${event.deviceId} " +
+                    "device=${event.device?.name} desc=${event.device?.descriptor} " +
+                    "fromGamepad=${event.isFromSource(InputDevice.SOURCE_GAMEPAD)} " +
+                    "fromDpad=${event.isFromSource(InputDevice.SOURCE_DPAD)} " +
+                    "fromJoystick=${event.isFromSource(InputDevice.SOURCE_JOYSTICK)}"
+        )
+    }
+
+    private fun logGamepadMotionEvent(event: MotionEvent, leftX: Float, leftY: Float, hatX: Float, hatY: Float) {
+        val now = System.nanoTime()
+        val interesting = kotlin.math.abs(leftX) > 0.05f || kotlin.math.abs(leftY) > 0.05f ||
+                kotlin.math.abs(hatX) > 0.05f || kotlin.math.abs(hatY) > 0.05f
+        if (!interesting || now - lastGamepadMotionLogTime < 120_000_000L) return
+        lastGamepadMotionLogTime = now
+
+        Log.d(
+            "ZLGamepadBridge",
+            "MOTION action=${event.action} source=0x${Integer.toHexString(event.source)} deviceId=${event.deviceId} " +
+                    "device=${event.device?.name} desc=${event.device?.descriptor} " +
+                    "LX=${"%.3f".format(leftX)} LY=${"%.3f".format(leftY)} " +
+                    "HAT_X=${"%.3f".format(hatX)} HAT_Y=${"%.3f".format(hatY)} " +
+                    "RX=${"%.3f".format(event.axis(MotionEvent.AXIS_RX))} RY=${"%.3f".format(event.axis(MotionEvent.AXIS_RY))} " +
+                    "Z=${"%.3f".format(event.axis(MotionEvent.AXIS_Z))} RZ=${"%.3f".format(event.axis(MotionEvent.AXIS_RZ))} " +
+                    "fromGamepad=${event.isFromSource(InputDevice.SOURCE_GAMEPAD)} " +
+                    "fromDpad=${event.isFromSource(InputDevice.SOURCE_DPAD)} " +
+                    "fromJoystick=${event.isFromSource(InputDevice.SOURCE_JOYSTICK)}"
+        )
     }
 
     private fun handleDpadKeyEvent(event: KeyEvent, button: Int): Boolean {
+        logGamepadKeyEvent(event, button)
         val pressed = event.action == KeyEvent.ACTION_DOWN
-        CallbackBridge.glfwUpdateAndroidGamepadButton(button, pressed)
         if (pressed) {
+            keyDpadButtons.put(button, true)
             forwardedDpadButtons.put(button, true)
         } else {
+            keyDpadButtons.delete(button)
             forwardedDpadButtons.delete(button)
             pendingDpadButtons.delete(button)
         }
+        setGlfwDpadButton(button)
         return true
     }
 
@@ -669,6 +735,9 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
 
         val leftX = event.axis(MotionEvent.AXIS_X)
         val leftY = event.axis(MotionEvent.AXIS_Y)
+        val hatX = event.axis(MotionEvent.AXIS_HAT_X)
+        val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
+        logGamepadMotionEvent(event, leftX, leftY, hatX, hatY)
         if (kotlin.math.abs(leftX) > 0.15f || kotlin.math.abs(leftY) > 0.15f) {
             lastLeftStickMotionTime = System.nanoTime()
             releaseGlfwDpadButtons()
@@ -688,14 +757,21 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, leftTrigger * 2f - 1f)
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, rightTrigger * 2f - 1f)
 
-        // Do not synthesize GLFW d-pad buttons from AXIS_HAT_X / AXIS_HAT_Y here.
-        // Some Android controllers report left-stick movement on hat axes as well, which makes
-        // Controlify think the d-pad is pressed while the left stick is being moved.
-        // Physical d-pad buttons are still forwarded in updateGlfwGamepadKey() via KEYCODE_DPAD_*.
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, false)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, false)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, false)
-        CallbackBridge.glfwUpdateAndroidGamepadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, false)
+        // Android's official gamepad model reports many physical d-pads through AXIS_HAT_X/Y
+        // instead of KEYCODE_DPAD_*. Restore HAT -> GLFW d-pad, but only while the left stick is
+        // near neutral so controllers that mirror left-stick movement onto HAT do not create fake
+        // d-pad presses in Controlify.
+        val leftStickActive = kotlin.math.abs(leftX) > 0.15f || kotlin.math.abs(leftY) > 0.15f
+        if (leftStickActive) {
+            clearHatDpadButtons()
+        } else {
+            val hatX = event.axis(MotionEvent.AXIS_HAT_X)
+            val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
+            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, hatX < -0.5f)
+            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, hatX > 0.5f)
+            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, hatY < -0.5f)
+            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, hatY > 0.5f)
+        }
 
         return true
     }
