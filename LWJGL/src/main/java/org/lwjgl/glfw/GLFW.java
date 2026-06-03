@@ -29,6 +29,7 @@ public class GLFW
 {
     static FloatBuffer joystickData = FloatBuffer.allocate(6);
     static ByteBuffer buttonData = ByteBuffer.allocate(15);
+    static ByteBuffer hatData = ByteBuffer.allocate(1);
 
     private static final int ANDROID_GAMEPAD_JID = 0;
     private static final float[] androidGamepadAxes = new float[] {0f, 0f, 0f, 0f, -1f, -1f};
@@ -1362,7 +1363,16 @@ public class GLFW
         return buttonData;
     }
     public static ByteBuffer glfwGetJoystickHats(int jid) {
-        return null;
+        if (!glfwJoystickPresent(jid)) return null;
+        byte hat = GLFW_HAT_CENTERED;
+        if (androidGamepadButtons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS) hat |= GLFW_HAT_UP;
+        if (androidGamepadButtons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] == GLFW_PRESS) hat |= GLFW_HAT_RIGHT;
+        if (androidGamepadButtons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] == GLFW_PRESS) hat |= GLFW_HAT_DOWN;
+        if (androidGamepadButtons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] == GLFW_PRESS) hat |= GLFW_HAT_LEFT;
+        hatData.clear();
+        hatData.put(hat);
+        hatData.flip();
+        return hatData;
     }
     public static ByteBuffer glfwGetjoystickHats(int jid) {
         return glfwGetJoystickHats(jid);
