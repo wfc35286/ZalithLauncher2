@@ -758,20 +758,14 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, rightTrigger * 2f - 1f)
 
         // Android's official gamepad model reports many physical d-pads through AXIS_HAT_X/Y
-        // instead of KEYCODE_DPAD_*. Restore HAT -> GLFW d-pad, but only while the left stick is
-        // near neutral so controllers that mirror left-stick movement onto HAT do not create fake
-        // d-pad presses in Controlify.
-        val leftStickActive = kotlin.math.abs(leftX) > 0.15f || kotlin.math.abs(leftY) > 0.15f
-        if (leftStickActive) {
-            clearHatDpadButtons()
-        } else {
-            val hatX = event.axis(MotionEvent.AXIS_HAT_X)
-            val hatY = event.axis(MotionEvent.AXIS_HAT_Y)
-            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, hatX < -0.5f)
-            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, hatX > 0.5f)
-            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, hatY < -0.5f)
-            setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, hatY > 0.5f)
-        }
+        // instead of KEYCODE_DPAD_*. HAT axes are independent from the left stick AXIS_X/Y, and
+        // Android MotionEvent may include all axis values even when only the left stick changes.
+        // Therefore, do not suppress explicit HAT directions while the left stick is moving:
+        // if HAT_X/Y is non-zero, it is treated as a real d-pad input.
+        setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT, hatX < -0.5f)
+        setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, hatX > 0.5f)
+        setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_UP, hatY < -0.5f)
+        setHatDpadButton(CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_DOWN, hatY > 0.5f)
 
         return true
     }
