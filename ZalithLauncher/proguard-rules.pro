@@ -48,11 +48,13 @@
     public static final android.os.Parcelable$Creator CREATOR;
 }
 
-# WFC fork: launcher settings added for AI crash analysis.
+# WFC fork: launcher/gamepad settings added for AI crash analysis and mod-compatible gamepad bridge.
 # Keep field names and accessors stable because settings are centralized in a singleton and used across Compose screens.
 -keep class com.movtery.zalithlauncher.setting.AllSettings { *; }
 -keep class com.movtery.zalithlauncher.setting.AllSettings$* { *; }
 -keep class com.movtery.zalithlauncher.ui.screens.content.settings.LauncherSettingsScreenKt { *; }
+-keep class com.movtery.zalithlauncher.ui.screens.content.settings.GamepadSettingsScreenKt { *; }
+-keep class com.movtery.zalithlauncher.ui.screens.game.elements.GameMenuSubscreenKt { *; }
 
 # WFC fork: Microsoft OAuth diagnostics/custom client-id validation.
 -keep class com.movtery.zalithlauncher.game.account.microsoft.MicrosoftAuthenticatorKt { *; }
