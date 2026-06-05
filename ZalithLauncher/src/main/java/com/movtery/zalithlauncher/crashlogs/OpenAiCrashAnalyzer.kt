@@ -45,7 +45,7 @@ object OpenAiCrashAnalyzer {
                 val request = Request.Builder()
                     .url(url)
                     .header("Authorization", "Bearer ${apiKey.trim()}")
-                    .header("User-Agent", "ZalithLauncher-CrashAI")
+                    .header("User-Agent", "WLauncher-CrashAI")
                     .get()
                     .build()
                 client.newCall(request).execute().use { response ->
@@ -92,7 +92,7 @@ object OpenAiCrashAnalyzer {
         val request = Request.Builder()
             .url(chatCompletionsUrl(baseUrl))
             .header("Authorization", "Bearer ${apiKey.trim()}")
-            .header("User-Agent", "ZalithLauncher-CrashAI")
+            .header("User-Agent", "WLauncher-CrashAI")
             .post(payload.toRequestBody(jsonMedia))
             .build()
 

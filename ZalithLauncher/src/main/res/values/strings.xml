@@ -1224,9 +1224,14 @@
     <!-- About -->
     <string name="about_launcher_title">About Launcher</string>
     <string name="about_launcher_version">Launcher Version: %s</string>
+    <string name="about_launcher_unofficial_modified">Unofficial modified version</string>
     <string name="about_launcher_author_movtery_title">MovTery</string>
     <string name="about_launcher_author_movtery_text">Author of %s</string>
     <string name="about_launcher_project_link">Project Link</string>
+    <string name="about_launcher_author_wfc_title">wfc35286</string>
+    <string name="about_launcher_author_wfc_text">Maintainer of %s. This is an unofficial modified version for personal use.</string>
+    <string name="about_acknowledgements_zalith_text">%s is based on Zalith Launcher 2. Thanks to the original project and all contributors.</string>
+    <string name="about_acknowledgements_movtery_text">Original author of Zalith Launcher 2</string>
     <string name="about_sponsor">Sponsorship Support</string>
     <string name="about_acknowledgements_title">Acknowledgements</string>
     <string name="about_acknowledgements_pojav_text">%s uses the launch backend from PojavLauncher</string>

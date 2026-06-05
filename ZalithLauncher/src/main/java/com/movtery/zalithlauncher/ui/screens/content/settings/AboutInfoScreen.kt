@@ -105,7 +105,7 @@ fun AboutInfoScreen(
                         ButtonIconItem(
                             icon = painterResource(R.drawable.img_launcher),
                             title = BuildKeys.LAUNCHER_NAME,
-                            text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME),
+                            text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME) + " · " + stringResource(R.string.about_launcher_unofficial_modified),
                             button = {
                                 Button(
                                     onClick = checkUpdate
@@ -121,16 +121,17 @@ fun AboutInfoScreen(
                         )
 
                         ButtonIconItem(
-                            icon = painterResource(R.drawable.img_avatar_movtery),
-                            title = stringResource(R.string.about_launcher_author_movtery_title),
-                            text = stringResource(R.string.about_launcher_author_movtery_text, BuildKeys.LAUNCHER_NAME),
+                            icon = painterResource(R.drawable.ic_person_outlined),
+                            title = stringResource(R.string.about_launcher_author_wfc_title),
+                            text = stringResource(R.string.about_launcher_author_wfc_text, BuildKeys.LAUNCHER_NAME),
                             button = {
                                 Button(
-                                    onClick = { openLink(URL_SUPPORT) }
+                                    onClick = { openLink(URL_PROJECT) }
                                 ) {
-                                    Text(text = stringResource(R.string.about_sponsor))
+                                    Text(text = stringResource(R.string.about_launcher_project_link))
                                 }
-                            }
+                            },
+                            useImage = false
                         )
                     }
                 }
@@ -142,6 +143,18 @@ fun AboutInfoScreen(
                     title = stringResource(R.string.about_acknowledgements_title)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LinkIconItem(
+                            icon = painterResource(R.drawable.img_launcher),
+                            title = "Zalith Launcher 2",
+                            text = stringResource(R.string.about_acknowledgements_zalith_text, BuildKeys.LAUNCHER_SHORT_NAME),
+                            openLink = { openLink("https://github.com/ZalithLauncher/ZalithLauncher2") }
+                        )
+                        LinkIconItem(
+                            icon = painterResource(R.drawable.img_avatar_movtery),
+                            title = stringResource(R.string.about_launcher_author_movtery_title),
+                            text = stringResource(R.string.about_acknowledgements_movtery_text),
+                            openLink = { openLink("https://github.com/MovTery") }
+                        )
                         ButtonIconItem(
                             icon = painterResource(R.drawable.img_avatar_bangbang93),
                             title = "bangbang93",
@@ -373,6 +386,7 @@ private fun ButtonIconItem(
     button: @Composable RowScope.() -> Unit,
     color: Color = itemColor(),
     contentColor: Color = onItemColor(),
+    useImage: Boolean = true,
 ) {
     Surface(
         modifier = modifier,
@@ -388,14 +402,23 @@ private fun ButtonIconItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(shape = RoundedCornerShape(6.dp)),
-                painter = icon,
-                contentDescription = null,
-                contentScale = ContentScale.Fit
-            )
+            val iconModifier = Modifier
+                .size(34.dp)
+                .clip(shape = RoundedCornerShape(6.dp))
+            if (useImage) {
+                Image(
+                    modifier = iconModifier,
+                    painter = icon,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Icon(
+                    modifier = iconModifier,
+                    painter = icon,
+                    contentDescription = null
+                )
+            }
 
             Column(
                 modifier = Modifier.weight(1f)
