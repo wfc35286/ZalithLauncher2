@@ -953,6 +953,13 @@
     <string name="settings_launcher_swap_animate_type_title">頁面切換動畫</string>
     <string name="settings_launcher_swap_animate_type_summary">根據您的需求，選擇最適合自己的頁面切換動畫</string>
     <!--  關於  -->
+    <string name="wlauncher_notice_title">W Launcher 使用說明</string>
+    <string name="wlauncher_notice_text">本應用是由個人維護、面向個人使用習慣修改的非官方修改版，不由 Zalith Launcher 2 官方專案維護、發布或背書。
+
+原專案及版權聲明已保留在「鳴謝 / 關於」頁面中。如果你需要公開穩定的官方版本，請使用上游 Zalith Launcher 2 專案。
+
+本分支主要用於個人裝置適配、手把 / 模組相容實驗以及工作流個性化調整。請自行判斷是否使用。</string>
+    <string name="wlauncher_notice_confirm">我已了解</string>
     <string name="about_launcher_title">關於啟動器</string>
     <string name="about_launcher_version">啟動器版本：%s</string>
     <string name="about_launcher_unofficial_modified">非官方修改版</string>

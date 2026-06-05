@@ -1224,6 +1224,13 @@
     <string name="control_editor_exit_message">Are you sure you want to exit directly? This will cause any changes to be unsaved. If you need to save, please check the editor menu.</string>
     <string name="control_editor_exit_confirm">Exit Directly</string>
     <!-- About -->
+    <string name="wlauncher_notice_title">W Launcher Notice</string>
+    <string name="wlauncher_notice_text">This app is an unofficial modified version maintained for personal use. It is not maintained, published, or endorsed by the official Zalith Launcher 2 project.
+
+The original project and copyright notices are retained in the acknowledgements/about page. If you need the public official version, please use the upstream Zalith Launcher 2 project.
+
+This branch focuses on personal device adaptation, controller/mod compatibility experiments, and workflow customization. Use it at your own discretion.</string>
+    <string name="wlauncher_notice_confirm">I understand</string>
     <string name="about_launcher_title">About Launcher</string>
     <string name="about_launcher_version">Launcher Version: %s</string>
     <string name="about_launcher_unofficial_modified">Unofficial modified version</string>

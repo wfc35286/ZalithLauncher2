@@ -329,8 +329,21 @@ class MainActivity : BaseAppCompatActivity() {
                     )
                 }
 
+                //首次使用时提示：这是个人维护的非官方修改版
+                if (!AllSettings.wLauncherNoticeAccepted.state) {
+                    SimpleAlertDialog(
+                        title = stringResource(R.string.wlauncher_notice_title),
+                        text = stringResource(R.string.wlauncher_notice_text),
+                        confirmText = stringResource(R.string.wlauncher_notice_confirm),
+                        dismissByDialog = false,
+                        onDismiss = {
+                            AllSettings.wLauncherNoticeAccepted.save(true)
+                        }
+                    )
+                }
+
                 //显示赞助支持的小弹窗
-                if (!isImporting && finishedGame.state >= 100 && showSponsorship.state) {
+                if (!isImporting && finishedGame.state >= 100 && showSponsorship.state && AllSettings.wLauncherNoticeAccepted.state) {
                     SimpleAlertDialog(
                         title = stringResource(R.string.about_sponsor),
                         text = stringResource(R.string.game_saponsorship_finished_game, finishedGame.state),

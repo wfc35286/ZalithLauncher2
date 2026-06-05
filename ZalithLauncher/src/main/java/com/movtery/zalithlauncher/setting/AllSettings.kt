@@ -471,6 +471,11 @@ object AllSettings : SettingsRegistry() {
 
     //Other
     /**
+     * 是否已确认 W Launcher 非官方修改版说明
+     */
+    val wLauncherNoticeAccepted = boolSetting("wLauncherNoticeAccepted", false)
+
+    /**
      * 当前选择的账号
      */
     val currentAccount = stringSetting("currentAccount", "")

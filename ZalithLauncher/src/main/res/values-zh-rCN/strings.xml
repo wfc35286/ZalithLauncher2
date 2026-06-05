@@ -1221,6 +1221,13 @@
     <string name="control_editor_exit_message">您确定要直接退出吗，这会导致您的任何更改都无法被保存。若需要保存，请检查编辑器菜单。</string>
     <string name="control_editor_exit_confirm">直接退出</string>
     <!--  关于  -->
+    <string name="wlauncher_notice_title">W Launcher 使用说明</string>
+    <string name="wlauncher_notice_text">本应用是由个人维护、面向个人使用习惯修改的非官方修改版，不由 Zalith Launcher 2 官方项目维护、发布或背书。
+
+原项目及版权声明已保留在“鸣谢 / 关于”页面中。如果你需要公开稳定的官方版本，请使用上游 Zalith Launcher 2 项目。
+
+本分支主要用于个人设备适配、手柄 / 模组兼容实验以及工作流个性化调整。请自行判断是否使用。</string>
+    <string name="wlauncher_notice_confirm">我已了解</string>
     <string name="about_launcher_title">关于启动器</string>
     <string name="about_launcher_version">启动器版本：%s</string>
     <string name="about_launcher_unofficial_modified">非官方修改版</string>
