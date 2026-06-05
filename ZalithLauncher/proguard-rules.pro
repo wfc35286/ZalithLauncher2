@@ -68,3 +68,6 @@
 # Keep VMActivity members to avoid Release-only optimization around input dispatch state machines.
 -keep class com.movtery.zalithlauncher.ui.activities.VMActivity { *; }
 -keep class com.movtery.zalithlauncher.ui.activities.VMActivity$* { *; }
+
+# Libraries
+-keep class com.github.steveice10.opennbt.** { *; }
