@@ -983,6 +983,8 @@
     <string name="settings_control_gyroscope_invert_y_summary">启用后，上下转动设备会反向控制视角</string>
     <string name="settings_gamepad_title">手柄控制</string>
     <string name="settings_gamepad_summary">启用或关闭手柄控制功能。若您的其他外设被误识别为手柄，请关闭此选项</string>
+    <string name="settings_gamepad_mod_compatibility_title">模组兼容</string>
+    <string name="settings_gamepad_mod_compatibility_summary">将 Android 手柄桥接为 GLFW 手柄，供 Controlify 等手柄模组识别。关闭后仅使用官方启动器自带手柄映射。</string>
     <string name="settings_gamepad_deadzone_title">手柄死区缩放</string>
     <string name="settings_gamepad_deadzone_summary">设置摇杆中心无响应区域的比例</string>
     <string name="settings_gamepad_joystick_mode_title">摇杆操作模式</string>

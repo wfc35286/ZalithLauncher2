@@ -248,6 +248,11 @@ object AllSettings : SettingsRegistry() {
     val gamepadControl = boolSetting("gamepadControl", true)
 
     /**
+     * 是否启用面向模组的 GLFW 手柄兼容桥接
+     */
+    val gamepadModCompatibility = boolSetting("gamepadModCompatibility", false)
+
+    /**
      * 摇杆死区缩放
      */
     val gamepadDeadZoneScale = intSetting("gamepadDeadZoneScale", 100, 50..200)

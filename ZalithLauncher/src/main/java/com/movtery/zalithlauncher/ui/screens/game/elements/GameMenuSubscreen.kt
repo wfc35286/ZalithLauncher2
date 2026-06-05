@@ -561,6 +561,21 @@ private fun ControlGamepad(
             )
         }
 
+        //模组兼容手柄桥接
+        if (AllSettings.gamepadControl.state) {
+            item {
+                MenuSwitchButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.settings_gamepad_mod_compatibility_title),
+                    switch = AllSettings.gamepadModCompatibility.state,
+                    onSwitch = { AllSettings.gamepadModCompatibility.save(it) },
+                    color = color,
+                    contentColor = contentColor,
+                    enabled = AllSettings.gamepadControl.state
+                )
+            }
+        }
+
         //手柄死区缩放
         item {
             MenuSliderLayout(

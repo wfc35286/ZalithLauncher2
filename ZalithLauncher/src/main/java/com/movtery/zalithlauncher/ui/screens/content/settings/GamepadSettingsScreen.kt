@@ -211,6 +211,17 @@ fun GamepadSettingsScreen(
                         summary = stringResource(R.string.settings_gamepad_summary)
                     )
 
+                    if (AllSettings.gamepadControl.state) {
+                        SwitchSettingsCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            position = CardPosition.Middle,
+                            unit = AllSettings.gamepadModCompatibility,
+                            title = stringResource(R.string.settings_gamepad_mod_compatibility_title),
+                            summary = stringResource(R.string.settings_gamepad_mod_compatibility_summary),
+                            enabled = AllSettings.gamepadControl.state
+                        )
+                    }
+
                     IntSliderSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Middle,

@@ -572,6 +572,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
 
     private fun updateGlfwGamepadInfo(device: InputDevice?) {
         device ?: return
+        glfwGamepadCompatActive = true
         CallbackBridge.glfwSetAndroidGamepadInfo(
             device.name ?: "Android Gamepad",
             device.descriptor ?: "android-gamepad-${device.id}"
@@ -604,6 +605,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
     }
 
     private var lastLeftStickMotionTime = 0L
+    private var glfwGamepadCompatActive = false
     private val dpadHandler = Handler(Looper.getMainLooper())
     private val pendingDpadButtons = SparseBooleanArray()
     private val forwardedDpadButtons = SparseBooleanArray()
@@ -642,6 +644,26 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         forwardedDpadButtons.clear()
         keyDpadButtons.clear()
         hatDpadButtons.clear()
+    }
+
+    private fun isGlfwGamepadCompatEnabled(): Boolean {
+        return AllSettings.gamepadControl.state && AllSettings.gamepadModCompatibility.state
+    }
+
+    private fun releaseGlfwGamepadCompatIfNeeded() {
+        if (!glfwGamepadCompatActive) return
+        for (button in CallbackBridge.GLFW_GAMEPAD_BUTTON_A..CallbackBridge.GLFW_GAMEPAD_BUTTON_DPAD_LEFT) {
+            CallbackBridge.glfwUpdateAndroidGamepadButton(button, false)
+        }
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_X, 0f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_Y, 0f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_X, 0f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_Y, 0f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, -1f)
+        CallbackBridge.glfwUpdateAndroidGamepadAxis(CallbackBridge.GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, -1f)
+        releaseGlfwDpadButtons()
+        CallbackBridge.glfwSetAndroidGamepadPresent(false)
+        glfwGamepadCompatActive = false
     }
 
     private var lastGamepadMotionLogTime = 0L
@@ -698,6 +720,10 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
 
     private fun updateGlfwGamepadKey(event: KeyEvent): Boolean {
         if (!isAndroidGamepadEvent(event.source, event.device)) return false
+        if (!isGlfwGamepadCompatEnabled()) {
+            releaseGlfwGamepadCompatIfNeeded()
+            return false
+        }
         updateGlfwGamepadInfo(event.device)
 
         val pressed = event.action == KeyEvent.ACTION_DOWN
@@ -731,6 +757,10 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
 
     private fun updateGlfwGamepadMotion(event: MotionEvent): Boolean {
         if (!isAndroidGamepadEvent(event.source, event.device) || event.action != MotionEvent.ACTION_MOVE) return false
+        if (!isGlfwGamepadCompatEnabled()) {
+            releaseGlfwGamepadCompatIfNeeded()
+            return false
+        }
         updateGlfwGamepadInfo(event.device)
 
         val leftX = event.axis(MotionEvent.AXIS_X)
