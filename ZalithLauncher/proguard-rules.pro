@@ -48,10 +48,14 @@
     public static final android.os.Parcelable$Creator CREATOR;
 }
 
-# WFC fork: launcher/gamepad settings added for AI crash analysis and mod-compatible gamepad bridge.
+# WFC fork: launcher/gamepad settings added for AI crash analysis, first-run notice and mod-compatible gamepad bridge.
 # Keep field names and accessors stable because settings are centralized in a singleton and used across Compose screens.
 -keep class com.movtery.zalithlauncher.setting.AllSettings { *; }
 -keep class com.movtery.zalithlauncher.setting.AllSettings$* { *; }
+-keep class com.movtery.zalithlauncher.ui.activities.MainActivity { *; }
+-keep class com.movtery.zalithlauncher.ui.activities.MainActivity$* { *; }
+-keep class com.movtery.zalithlauncher.path.UrlManagerKt { *; }
+-keep class com.movtery.zalithlauncher.ui.screens.content.settings.AboutInfoScreenKt { *; }
 -keep class com.movtery.zalithlauncher.ui.screens.content.settings.LauncherSettingsScreenKt { *; }
 -keep class com.movtery.zalithlauncher.ui.screens.content.settings.GamepadSettingsScreenKt { *; }
 -keep class com.movtery.zalithlauncher.ui.screens.game.elements.GameMenuSubscreenKt { *; }
