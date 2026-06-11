@@ -76,12 +76,7 @@ import kotlin.coroutines.CoroutineContext
 private const val TAG = "MicrosoftAuth"
 
 private val SCOPES = listOf("XboxLive.signin", "offline_access", "openid", "profile", "email")
-private const val TENANT = "consumers"
-
-private fun getOAuthClientId(): String {
-    return BuildKeys.OAUTH_CLIENT_ID.trim().takeIf { it.isNotEmpty() }
-        ?: throw IllegalStateException("Microsoft OAuth Client ID is not configured. Please set OAUTH_CLIENT_ID in GitHub Secrets or oauth_client_id in gradle.properties before building.")
-}
+private const val TENANT = "/consumers"
 
 const val MICROSOFT_AUTH_URL = "https://login.microsoftonline.com"
 const val LIVE_AUTH_URL = "https://login.live.com"
@@ -98,8 +93,8 @@ suspend fun fetchDeviceCodeResponse(context: CoroutineContext): DeviceCodeRespon
         submitForm(
             url = "$MICROSOFT_AUTH_URL/$TENANT/oauth2/v2.0/devicecode",
             parameters = Parameters.build {
-append("client_id", getOAuthClientId())
-                    append("scope", SCOPES.joinToString(" "))
+                append("client_id", BuildKeys.OAUTH_CLIENT_ID)
+                append("scope", SCOPES.joinToString(" "))
             },
             context = context
         )
@@ -129,11 +124,11 @@ suspend fun getTokenResponse(
 
         try {
             val response: JsonObject = submitForm(
-                "$MICROSOFT_AUTH_URL/$TENANT/oauth2/v2.0/token",
+                "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/token",
                 parameters = Parameters.build {
                     append("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
                     append("device_code", codeResponse.deviceCode)
-                    append("client_id", getOAuthClientId())
+                    append("client_id", BuildKeys.OAUTH_CLIENT_ID)
                     append("tenant", TENANT)
                 },
                 context = context
@@ -222,8 +217,8 @@ private suspend fun refreshAccessToken(
         val response = submitForm<JsonObject>(
             url = "$LIVE_AUTH_URL/oauth20_token.srf",
             parameters = Parameters.build {
-append("client_id", getOAuthClientId())
-                    append("refresh_token", refreshToken)
+                append("client_id", BuildKeys.OAUTH_CLIENT_ID)
+                append("refresh_token", refreshToken)
                 append("grant_type", "refresh_token")
             },
             context = context
