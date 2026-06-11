@@ -16,4 +16,16 @@
         android:strokeWidth="0"
         android:fillColor="#fff"/>
   </group>
+<group>
+    <path
+        android:pathData="M1100,990 L1299,1105 L1299,1335 L1100,1450 L901,1335 L901,1105 Z"
+        android:fillColor="#fff"/>
+    <path
+        android:pathData="M965,1135 L1020,1325 L1100,1200 L1180,1325 L1235,1135"
+        android:fillColor="#00000000"
+        android:strokeColor="#fff"
+        android:strokeWidth="56"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
 </vector>
