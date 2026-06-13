@@ -141,6 +141,8 @@
     <string name="error_bad_gateway">(%s) 上游服务器返回了无效响应</string>
     <string name="error_service_unavailable">(%s) 服务器暂时无法处理请求</string>
     <string name="error_gateway_timeout">(%s) 服务器未能及时收到响应</string>
+    <string name="error_client_error">(%s) 客户端发生错误</string>
+    <string name="error_unknown">未知错误：%s</string>
     <!--  启动页面  -->
     <string name="splash_screen_unpack_desc">启动器需要安装这些内容，才能够确保 Minecraft 能够正常启动。这些内容已经包含在应用中，需要解压之后才能正常使用，点击下方按钮，开始解压并更新这些内容。</string>
     <string name="splash_screen_installing">启动器正在解压这些内容，解压完成后将自动进入主界面，请耐心等待。</string>
